@@ -5,6 +5,8 @@ import os
 
 from commands.temp import Temp
 from commands.cams import Cams
+from commands.cry import Cry
+
 from utils import import_env
 
 logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -17,6 +19,7 @@ def main():
     mqtt = Mqtt()
     temp_command = Temp(mqtt = mqtt)
     cams_command = Cams()
+    cry_command = Cry(mqtt = mqtt)
 
     updater = Updater(os.environ["TOKEN"], use_context=True)
 
@@ -26,6 +29,9 @@ def main():
     dp.add_handler(CommandHandler("cams", cams_command.cams))
     dp.add_handler(CallbackQueryHandler(cams_command.get_video, pattern="^cams,get_video\:.*$"))
     dp.add_handler(CallbackQueryHandler(cams_command.get_snapshot, pattern="^cams,get_snapshot\:.*$"))
+
+    dp.add_handler(CommandHandler("cry", cry_command.ask))
+    dp.add_handler(CallbackQueryHandler(cry_command.enable, pattern="^cry,enable\:.*$"))
 
     updater.start_polling()
     updater.idle()
