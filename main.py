@@ -8,6 +8,7 @@ from commands.cams import Cams
 from commands.cry import Cry
 from commands.set import Set
 from api import ApiServer
+from mail import MailServer
 
 from utils import import_env
 
@@ -51,6 +52,9 @@ def main():
 
     api_server = ApiServer(bot=bot, dispatcher=dispatcher)
     api_server.start()
+
+    mail_server = MailServer()
+    mail_server.start()
 
     updater.start_polling()
     updater.idle()

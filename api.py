@@ -4,7 +4,7 @@ import time
 import json
 import os
 import copy
-import urllib, urllib.request
+import urllib
 import shutil
 import re
 import datetime as dt
@@ -132,7 +132,6 @@ class ApiHandler(HTTPHandler):
 
                     if "attachments" in payload:
                         for attachment in payload["attachments"]:
-                            print(len(attachment))
                             file = tempfile.TemporaryFile()
                             file.write(base64.decodebytes(attachment.encode()))
                             file.seek(0)
