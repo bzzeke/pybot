@@ -1,11 +1,12 @@
 import logging
 from mqtt import Mqtt
-from telegram.ext import Updater, CommandHandler, MessageHandler, ConversationHandler, CallbackQueryHandler
+from telegram.ext import Updater, CommandHandler, MessageHandler, ConversationHandler, CallbackQueryHandler, Filters
 import os
 
 from commands.temp import Temp
 from commands.cams import Cams
 from commands.cry import Cry
+from commands.set import Set
 
 from utils import import_env
 
@@ -20,6 +21,7 @@ def main():
     temp_command = Temp(mqtt = mqtt)
     cams_command = Cams()
     cry_command = Cry(mqtt = mqtt)
+    set_command = Set(mqtt = mqtt)
 
     updater = Updater(os.environ["TOKEN"], use_context=True)
 
@@ -32,6 +34,17 @@ def main():
 
     dp.add_handler(CommandHandler("cry", cry_command.ask))
     dp.add_handler(CallbackQueryHandler(cry_command.enable, pattern="^cry,enable\:.*$"))
+
+    dp.add_handler(ConversationHandler(
+        entry_points=[CommandHandler('set', set_command.select_topic)],
+
+        states={
+            "publish": [MessageHandler(Filters.all, set_command.publish)],
+        },
+        fallbacks = []
+    ))
+    dp.add_handler(CallbackQueryHandler(set_command.set_value, pattern="^set,topic\:.*$"))
+    dp.add_handler(CallbackQueryHandler(set_command.publish, pattern="^set,value\:.*$"))
 
     updater.start_polling()
     updater.idle()
