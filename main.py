@@ -7,6 +7,7 @@ from commands.temp import Temp
 from commands.cams import Cams
 from commands.cry import Cry
 from commands.set import Set
+from api import ApiServer
 
 from utils import import_env
 
@@ -25,17 +26,19 @@ def main():
 
     updater = Updater(os.environ["TOKEN"], use_context=True)
 
-    dp = updater.dispatcher
-    dp.add_handler(CommandHandler("temp", temp_command.run))
+    bot = updater.bot
+    dispatcher = updater.dispatcher
 
-    dp.add_handler(CommandHandler("cams", cams_command.cams))
-    dp.add_handler(CallbackQueryHandler(cams_command.get_video, pattern="^cams,get_video\:.*$"))
-    dp.add_handler(CallbackQueryHandler(cams_command.get_snapshot, pattern="^cams,get_snapshot\:.*$"))
+    dispatcher.add_handler(CommandHandler("temp", temp_command.run))
 
-    dp.add_handler(CommandHandler("cry", cry_command.ask))
-    dp.add_handler(CallbackQueryHandler(cry_command.enable, pattern="^cry,enable\:.*$"))
+    dispatcher.add_handler(CommandHandler("cams", cams_command.cams))
+    dispatcher.add_handler(CallbackQueryHandler(cams_command.get_video, pattern="^cams,get_video\:.*$"))
+    dispatcher.add_handler(CallbackQueryHandler(cams_command.get_snapshot, pattern="^cams,get_snapshot\:.*$"))
 
-    dp.add_handler(ConversationHandler(
+    dispatcher.add_handler(CommandHandler("cry", cry_command.ask))
+    dispatcher.add_handler(CallbackQueryHandler(cry_command.enable, pattern="^cry,enable\:.*$"))
+
+    dispatcher.add_handler(ConversationHandler(
         entry_points=[CommandHandler('set', set_command.select_topic)],
 
         states={
@@ -43,11 +46,16 @@ def main():
         },
         fallbacks = []
     ))
-    dp.add_handler(CallbackQueryHandler(set_command.set_value, pattern="^set,topic\:.*$"))
-    dp.add_handler(CallbackQueryHandler(set_command.publish, pattern="^set,value\:.*$"))
+    dispatcher.add_handler(CallbackQueryHandler(set_command.set_value, pattern="^set,topic\:.*$"))
+    dispatcher.add_handler(CallbackQueryHandler(set_command.publish, pattern="^set,value\:.*$"))
+
+    api_server = ApiServer(bot=bot, dispatcher=dispatcher)
+    api_server.start()
 
     updater.start_polling()
     updater.idle()
+
+
 
 
 if __name__ == "__main__":
