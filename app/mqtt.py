@@ -14,7 +14,8 @@ class Mqtt:
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
         try:
-            self.client.connect(os.environ["MQTT_HOST"], int(os.environ["MQTT_PORT"]), self.TIMEOUT)
+            host, port = os.environ["MQTT_HOST"].split(":")
+            self.client.connect(host, int(port), self.TIMEOUT)
             self.client.loop_start()
         except Exception as e:
             log("[mqtt] Failed to connect: {}".format(e))
