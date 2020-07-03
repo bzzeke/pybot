@@ -1,8 +1,8 @@
 import requests
 import os
-import traceback
 
 from renderers.markdown import Markdown
+from utils import log
 
 class Temp:
     mqtt = None
@@ -23,5 +23,4 @@ class Temp:
             renderer = Markdown(topic_values, widgets["results"])
             update.message.reply_markdown(renderer.render())
         except Exception as e:
-            print("JSON decode error: {}".format(e))
-            traceback.print_exc()
+            log("[temp] JSON decode error: {}".format(e))

@@ -1,13 +1,12 @@
 import requests
 import os
-import traceback
 import requests
 import shutil
 import tempfile
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
-from utils import serialize, unserialize
+from utils import log, serialize, unserialize
 
 class Cams:
 
@@ -32,8 +31,7 @@ class Cams:
                 reply_markup=InlineKeyboardMarkup(keyboard))
 
         except Exception as e:
-            print("JSON decode error: {}".format(e))
-            traceback.print_exc()
+            log("[cams] JSON decode error: {}".format(e))
 
 
     def get_snapshot(self, update, context):

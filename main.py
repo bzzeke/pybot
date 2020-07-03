@@ -1,7 +1,8 @@
-import logging
+import os
+import time
+
 from mqtt import Mqtt
 from telegram.ext import Updater, CommandHandler, MessageHandler, ConversationHandler, CallbackQueryHandler, Filters
-import os
 
 from commands.temp import Temp
 from commands.cams import Cams
@@ -9,14 +10,9 @@ from commands.cry import Cry
 from commands.set import Set
 from api import ApiServer
 from mail import MailServer
+from utils import import_env, log
 
-from utils import import_env
-
-logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-                    level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-def main():
+if __name__ == "__main__":
     import_env()
 
     mqtt = Mqtt()
@@ -25,7 +21,7 @@ def main():
     cry_command = Cry(mqtt = mqtt)
     set_command = Set(mqtt = mqtt)
 
-    updater = Updater(os.environ["TOKEN"], use_context=True)
+    updater = Updater(os.environ["BOT_TOKEN"], use_context=True)
 
     bot = updater.bot
     dispatcher = updater.dispatcher
@@ -57,10 +53,21 @@ def main():
     mail_server.start()
 
     updater.start_polling()
-    updater.idle()
+
+    try:
+        while True:
+            time.sleep(1)
+
+    except KeyboardInterrupt:
+
+        log("[main] Stopping all")
+        updater.stop()
+
+        mail_server.stop()
+        api_server.stop()
+
+        mail_server.join()
+        api_server.join()
 
 
 
-
-if __name__ == "__main__":
-    main()

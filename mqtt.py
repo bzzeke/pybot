@@ -24,13 +24,12 @@ class Mqtt:
         if rc != 0:
             return
 
-        print("MQTT subscribed")
+        log("[mqtt] subscribed to topic {}".format(self.SUBSCRIBE_TOPIC))
         client.subscribe(self.SUBSCRIBE_TOPIC)
 
     def on_message(self, client, userdata, msg):
         payload = msg.payload.decode("utf-8")
         self.state[msg.topic] = payload
-        # print("Got message: {} -> {}".format(msg.topic, payload))
 
     def publish(self, topic, payload):
         self.client.publish(topic, payload)

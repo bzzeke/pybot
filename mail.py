@@ -1,8 +1,9 @@
 import os
-import asyncore
 import requests
 import email
 import base64
+import time
+import asyncore
 
 from smtpd import SMTPServer
 from threading import Thread
@@ -40,20 +41,18 @@ class EMailServer(SMTPServer):
         requests.post("http://{}:{}/notify/general".format(os.environ["API_SERVER_HOST"], os.environ["API_SERVER_PORT"]), json=notification)
 
     def is_valid_sender(self, sender):
-        return True
+        return sender == os.environ["SMTP_VALID_EMAIL"]
 
 
 class MailServer(Thread):
+    smtp = None
 
     def run(self):
         log("[mail_server] Starting service")
 
-        EMailServer((os.environ["API_SERVER_HOST"], 1025), None)
+        self.smtp = EMailServer((os.environ["API_SERVER_HOST"], int(os.environ["MAIL_PORT"])), None)
 
-        try:
-            asyncore.loop()
-        except KeyboardInterrupt:
-            pass
+        asyncore.loop()
 
     def stop(self):
-        log("[mail_server] Not implemented")
+        self.smtp.close()
