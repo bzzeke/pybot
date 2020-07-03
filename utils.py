@@ -20,11 +20,8 @@ def import_env():
             if len(parts) == 2:
                 os.environ[parts[0].strip()] = parts[1].strip()
 
-def serialize(command, state, payload):
-    return "{},{}:{}".format(command, state, payload)
+def serialize(id, payload):
+    return "{}:{}".format(id, payload)
 
 def unserialize(data):
-    system, payload = data.split(":", 1)
-    command, state = system.split(",")
-
-    return command, state, payload
+    return data.split(":", 1)

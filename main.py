@@ -2,7 +2,7 @@ import os
 import time
 
 from mqtt import Mqtt
-from telegram.ext import Updater, CommandHandler, MessageHandler, ConversationHandler, CallbackQueryHandler, Filters
+from telegram.ext import Updater
 
 from commands.temp import Temp
 from commands.cams import Cams
@@ -15,36 +15,17 @@ from utils import import_env, log
 if __name__ == "__main__":
     import_env()
 
-    mqtt = Mqtt()
-    temp_command = Temp(mqtt = mqtt)
-    cams_command = Cams()
-    cry_command = Cry(mqtt = mqtt)
-    set_command = Set(mqtt = mqtt)
-
     updater = Updater(os.environ["BOT_TOKEN"], use_context=True)
 
     bot = updater.bot
     dispatcher = updater.dispatcher
 
-    dispatcher.add_handler(CommandHandler("temp", temp_command.run))
 
-    dispatcher.add_handler(CommandHandler("cams", cams_command.cams))
-    dispatcher.add_handler(CallbackQueryHandler(cams_command.get_video, pattern="^cams,get_video\:.*$"))
-    dispatcher.add_handler(CallbackQueryHandler(cams_command.get_snapshot, pattern="^cams,get_snapshot\:.*$"))
-
-    dispatcher.add_handler(CommandHandler("cry", cry_command.ask))
-    dispatcher.add_handler(CallbackQueryHandler(cry_command.enable, pattern="^cry,enable\:.*$"))
-
-    dispatcher.add_handler(ConversationHandler(
-        entry_points=[CommandHandler('set', set_command.select_topic)],
-
-        states={
-            "publish": [MessageHandler(Filters.all, set_command.publish)],
-        },
-        fallbacks = []
-    ))
-    dispatcher.add_handler(CallbackQueryHandler(set_command.set_value, pattern="^set,topic\:.*$"))
-    dispatcher.add_handler(CallbackQueryHandler(set_command.publish, pattern="^set,value\:.*$"))
+    mqtt = Mqtt()
+    temp_command = Temp(dispatcher = dispatcher, mqtt = mqtt)
+    cams_command = Cams(dispatcher = dispatcher)
+    cry_command = Cry(dispatcher = dispatcher, mqtt = mqtt)
+    set_command = Set(dispatcher = dispatcher, mqtt = mqtt)
 
     api_server = ApiServer(bot=bot, dispatcher=dispatcher)
     api_server.start()

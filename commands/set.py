@@ -3,13 +3,16 @@ import os
 import traceback
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ConversationHandler
+from telegram.ext import ConversationHandler, CommandHandler, MessageHandler, CallbackQueryHandler, Filters
 
 from utils import serialize, unserialize
 
 class Set:
 
     mqtt = None
+    TOPIC_CALLBACK_ID = "settopic"
+    VALUE_CALLBACK_ID = "setvalue"
+
     TOPIC_TEMPLATE = "/devices/thermostat/controls/{}/on"
     TOPICS = {
         "Floor_1": {
@@ -37,20 +40,30 @@ class Set:
     }
 
 
-    def __init__(self, mqtt):
+    def __init__(self, dispatcher, mqtt):
         self.mqtt = mqtt
+        dispatcher.add_handler(ConversationHandler(
+            entry_points=[CommandHandler('set', self.select_topic)],
+
+            states={
+                "publish": [MessageHandler(Filters.all, self.publish)],
+            },
+            fallbacks = []
+        ))
+        dispatcher.add_handler(CallbackQueryHandler(self.set_value, pattern="^{}\:.*$".format(self.TOPIC_CALLBACK_ID)))
+        dispatcher.add_handler(CallbackQueryHandler(self.publish, pattern="^{}\:.*$".format(self.VALUE_CALLBACK_ID)))
 
     def select_topic(self, update, context):
 
         keyboard = [
             [
-                InlineKeyboardButton(self.TOPICS["Floor_1"]["text"], callback_data=self.generate_callback("topic", "Floor_1")),
-                InlineKeyboardButton(self.TOPICS["Floor_2"]["text"], callback_data=self.generate_callback("topic", "Floor_2")),
-                InlineKeyboardButton(self.TOPICS["Basement"]["text"], callback_data=self.generate_callback("topic", "Basement"))
+                InlineKeyboardButton(self.TOPICS["Floor_1"]["text"], callback_data=serialize(self.TOPIC_CALLBACK_ID, "Floor_1")),
+                InlineKeyboardButton(self.TOPICS["Floor_2"]["text"], callback_data=serialize(self.TOPIC_CALLBACK_ID, "Floor_2")),
+                InlineKeyboardButton(self.TOPICS["Basement"]["text"], callback_data=serialize(self.TOPIC_CALLBACK_ID, "Basement"))
             ],
             [
-                InlineKeyboardButton(self.TOPICS["Enabled"]["text"], callback_data=self.generate_callback("topic", "Enabled")),
-                InlineKeyboardButton(self.TOPICS["Simple"]["text"], callback_data=self.generate_callback("topic", "Simple"))
+                InlineKeyboardButton(self.TOPICS["Enabled"]["text"], callback_data=serialize(self.TOPIC_CALLBACK_ID, "Enabled")),
+                InlineKeyboardButton(self.TOPICS["Simple"]["text"], callback_data=serialize(self.TOPIC_CALLBACK_ID, "Simple"))
             ]
         ]
 
@@ -63,14 +76,14 @@ class Set:
     def set_value(self, update, context):
         query = update.callback_query
         query.answer()
-        topic = self.get_command(query.data)
+        id, topic = unserialize(query.data)
         context.user_data['topic'] = topic
 
         if self.TOPICS[topic]["type"] == "switch":
             keyboard = [
                 [
-                    InlineKeyboardButton(self.TOPICS[topic]["vars"][1], callback_data=self.generate_callback("value", "1")),
-                    InlineKeyboardButton(self.TOPICS[topic]["vars"][0], callback_data=self.generate_callback("value", "0"))
+                    InlineKeyboardButton(self.TOPICS[topic]["vars"][1], callback_data=serialize(self.VALUE_CALLBACK_ID, "1")),
+                    InlineKeyboardButton(self.TOPICS[topic]["vars"][0], callback_data=serialize(self.VALUE_CALLBACK_ID, "0"))
                 ]
             ]
 
@@ -89,7 +102,7 @@ class Set:
         query = update.callback_query
         if query != None:
             query.answer()
-            payload = self.get_command(query.data)
+            id, payload = unserialize(query.data)
         else:
             payload = update.message.text
 
@@ -106,15 +119,3 @@ class Set:
             update.message.reply_markdown(text)
 
         return ConversationHandler.END
-
-    def generate_callback(self, type, payload):
-
-        return serialize(
-            "set",
-            type,
-            payload
-        )
-
-    def get_command(self, payload):
-        command, state, data = unserialize(payload)
-        return data

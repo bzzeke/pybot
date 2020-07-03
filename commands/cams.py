@@ -5,13 +5,22 @@ import shutil
 import tempfile
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import CommandHandler, CallbackQueryHandler
 
 from utils import log, serialize, unserialize
 
 class Cams:
 
+    VIDEO_CALLBACK_ID = "video"
+    SNAPSHOT_CALLBACK_ID = "snapshot"
+
     ALL_CAMERAS = "all"
     cameras = []
+
+    def __init__(self, dispatcher):
+        dispatcher.add_handler(CommandHandler("cams", self.cams))
+        dispatcher.add_handler(CallbackQueryHandler(self.get_video, pattern="^{}\:.*$".format(self.VIDEO_CALLBACK_ID)))
+        dispatcher.add_handler(CallbackQueryHandler(self.get_snapshot, pattern="^{}\:.*$".format(self.SNAPSHOT_CALLBACK_ID)))
 
     def cams(self, update, context):
 
@@ -20,11 +29,11 @@ class Cams:
         try:
             cameras = r.json()
             keyboard = [
-                [InlineKeyboardButton("All", callback_data=self.generate_callback("all"))]
+                [InlineKeyboardButton("All", callback_data=serialize(self.SNAPSHOT_CALLBACK_ID, "all"))]
             ]
             for camera in cameras["results"]:
                 self.cameras.append(camera["name"])
-                keyboard.append([InlineKeyboardButton(camera["name"], callback_data=self.generate_callback(camera["name"]))])
+                keyboard.append([InlineKeyboardButton(camera["name"], callback_data=serialize(self.SNAPSHOT_CALLBACK_ID, camera["name"]))])
 
             update.message.reply_text(
                 'Select camera:',
@@ -37,7 +46,7 @@ class Cams:
     def get_snapshot(self, update, context):
         query = update.callback_query
         query.answer()
-        cam_id = self.get_command(query.data)
+        id, cam_id = unserialize(query.data)
 
         for file in self.download_snapshots(cam_id):
             query.bot.send_photo(chat_id=query.message.chat.id, photo = file)
@@ -45,7 +54,7 @@ class Cams:
     def get_video(self, update, context):
         query = update.callback_query
         query.answer()
-        meta = self.get_command(query.data)
+        id, meta = unserialize(query.data)
 
         file = self.download_video(meta)
         if file != None:
@@ -84,15 +93,3 @@ class Cams:
             video_file.seek(0)
 
         return video_file if os.fstat(video_file.fileno()).st_size > 0 else None
-
-    def generate_callback(self, payload):
-
-        return serialize(
-            "cams",
-            "get_snapshot",
-            payload
-        )
-
-    def get_command(self, payload):
-        command, state, data = unserialize(payload)
-        return data

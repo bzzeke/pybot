@@ -1,14 +1,17 @@
 import requests
 import os
 
+from telegram.ext import CommandHandler
+
 from renderers.markdown import Markdown
 from utils import log
 
 class Temp:
     mqtt = None
 
-    def __init__(self, mqtt):
+    def __init__(self, dispatcher, mqtt):
         self.mqtt = mqtt
+        dispatcher.add_handler(CommandHandler("temp", self.run))
 
     def run(self, update, context):
 
