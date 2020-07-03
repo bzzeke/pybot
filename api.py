@@ -15,9 +15,9 @@ import base64
 from threading import Thread
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from socketserver import ThreadingMixIn
-from telegram import Update
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 
-from utils import log
+from utils import log, serialize
 
 class ApiHTTPServer(ThreadingMixIn, HTTPServer):
     bot = None
@@ -111,7 +111,13 @@ class ApiHandler(HTTPHandler):
                 attachments: [
                     file1_base64,
                     file2_base64
-                ]
+                ],
+                meta: {
+                    surveillance: [
+                        [camera1, timestamp1],
+                        [camera2, timestamp2],
+                    ]
+                }
             }
             '''
             try:
@@ -131,12 +137,19 @@ class ApiHandler(HTTPHandler):
                         self.server.bot.send_document(chat_id=chat_id, document=file, filename="message.txt", parse_mode=payload["parse_mode"] if "parse_mode" in payload else "")
 
                     if "attachments" in payload:
-                        for attachment in payload["attachments"]:
+                        for index, attachment in enumerate(payload["attachments"]):
                             file = tempfile.TemporaryFile()
                             file.write(base64.decodebytes(attachment.encode()))
                             file.seek(0)
 
-                            self.server.bot.send_photo(chat_id=chat_id, photo = file)
+                            reply_markup = None
+                            if "meta" in payload and "surveillance" in payload["meta"]:
+                                camera, timestamp = tuple(payload["meta"]["surveillance"][index])
+                                reply_markup = InlineKeyboardMarkup([
+                                    [InlineKeyboardButton("Get video", callback_data=serialize("cams", "get_video", "{}_{}".format(camera, timestamp)))]
+                                ])
+
+                            self.server.bot.send_photo(chat_id=chat_id, photo = file, reply_markup=reply_markup)
 
                 response["status"] = "ok"
 

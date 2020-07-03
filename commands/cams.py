@@ -44,12 +44,13 @@ class Cams:
         for file in self.download_snapshots(cam_id):
             query.bot.send_photo(chat_id=query.message.chat.id, photo = file)
 
-    def get_video(self, bot, update):
+    def get_video(self, update, context):
         query = update.callback_query
         query.answer()
-        filename = self.get_command(query.data)
+        meta = self.get_command(query.data)
 
-        for file in self.download_video(filename):
+        file = self.download_video(meta)
+        if file != None:
             query.bot.send_video(chat_id=query.message.chat.id, video = file)
 
 
@@ -74,16 +75,17 @@ class Cams:
         return files
 
 
-    def download_video(self, filename):
+    def download_video(self, meta):
 
-        base = os.path.splitext(os.path.basename(filename))[0]
-        camera, timestamp = base.split("_")
+        camera, timestamp = meta.split("_")
         video_file = tempfile.TemporaryFile()
         url = "http://{}/video/{}/{}".format(os.environ["CAMERA_SERVER"], camera, timestamp)
+
         with requests.get(url, stream=True) as r:
             shutil.copyfileobj(r.raw, video_file)
+            video_file.seek(0)
 
-        return video_file
+        return video_file if os.fstat(video_file.fileno()).st_size > 0 else None
 
     def generate_callback(self, payload):
 
