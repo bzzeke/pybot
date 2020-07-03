@@ -31,7 +31,6 @@ if __name__ == "__main__":
     mail_server = MailServer()
     mail_server.start()
 
-
     try:
         while True:
             time.sleep(1)
@@ -43,6 +42,7 @@ if __name__ == "__main__":
         mail_server.stop()
         api_server.stop()
 
+        telegram.join()
         mail_server.join()
         api_server.join()
 
