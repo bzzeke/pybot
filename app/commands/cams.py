@@ -7,7 +7,7 @@ import tempfile
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CommandHandler, CallbackQueryHandler
 
-from utils import log, serialize, unserialize
+from util import log, serialize, unserialize
 
 class Cams:
 

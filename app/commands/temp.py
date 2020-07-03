@@ -4,7 +4,7 @@ import os
 from telegram.ext import CommandHandler
 
 from renderers.markdown import Markdown
-from utils import log
+from util import log
 
 class Temp:
     mqtt = None

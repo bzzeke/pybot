@@ -10,7 +10,7 @@ def log(text, log_level=None):
     syslog.syslog(log_level, text)
 
 def import_env():
-    filepath = os.path.dirname(os.path.realpath(__file__)) + "/.env"
+    filepath = os.path.dirname(os.path.realpath(__file__)) + "/../.env"
     if not os.path.isfile(filepath):
         return
 

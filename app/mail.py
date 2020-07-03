@@ -8,7 +8,7 @@ import asyncore
 from smtpd import SMTPServer
 from threading import Thread
 
-from utils import log
+from util import log
 
 class EMailServer(SMTPServer):
     def process_message(self, peer, mailfrom, rcpttos, data, **kwargs):

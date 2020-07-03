@@ -1,7 +1,7 @@
 import paho.mqtt.client as mqtt
 import os
 
-from utils import log
+from util import log
 
 class Mqtt:
     SUBSCRIBE_TOPIC = "/devices/+/controls/+"

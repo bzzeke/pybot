@@ -11,7 +11,7 @@ from api import ApiServer
 from mail import MailServer
 from tg import Telegram
 
-from utils import import_env, log
+from util import import_env, log
 
 if __name__ == "__main__":
     import_env()

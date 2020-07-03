@@ -5,7 +5,7 @@ import traceback
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ConversationHandler, CommandHandler, MessageHandler, CallbackQueryHandler, Filters
 
-from utils import serialize, unserialize
+from util import serialize, unserialize
 
 class Set:
 

@@ -17,7 +17,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from socketserver import ThreadingMixIn
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 
-from utils import log, serialize
+from util import log, serialize
 
 class ApiHTTPServer(ThreadingMixIn, HTTPServer):
     telegram = None

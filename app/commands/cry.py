@@ -5,7 +5,7 @@ import traceback
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CommandHandler, CallbackQueryHandler
 
-from utils import serialize, unserialize
+from util import serialize, unserialize
 
 class Cry:
     CRY_CALLBACK_ID = "cry"
