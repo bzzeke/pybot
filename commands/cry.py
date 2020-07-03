@@ -12,10 +12,10 @@ class Cry:
     MQTT_TOPIC = "/devices/util/controls/Cry Alarm/on"
     mqtt = None
 
-    def __init__(self, dispatcher, mqtt):
+    def __init__(self, telegram, mqtt):
         self.mqtt = mqtt
-        dispatcher.add_handler(CommandHandler("cry", self.ask))
-        dispatcher.add_handler(CallbackQueryHandler(self.enable, pattern="^{}\:.*$".format(self.CRY_CALLBACK_ID)))
+        telegram.dispatcher.add_handler(CommandHandler("cry", self.ask))
+        telegram.dispatcher.add_handler(CallbackQueryHandler(self.enable, pattern="^{}\:.*$".format(self.CRY_CALLBACK_ID)))
 
     def ask(self, update, context):
 

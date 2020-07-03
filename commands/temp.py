@@ -9,9 +9,9 @@ from utils import log
 class Temp:
     mqtt = None
 
-    def __init__(self, dispatcher, mqtt):
+    def __init__(self, telegram, mqtt):
         self.mqtt = mqtt
-        dispatcher.add_handler(CommandHandler("temp", self.run))
+        telegram.dispatcher.add_handler(CommandHandler("temp", self.run))
 
     def run(self, update, context):
 

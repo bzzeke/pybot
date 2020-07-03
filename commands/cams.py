@@ -17,10 +17,10 @@ class Cams:
     ALL_CAMERAS = "all"
     cameras = []
 
-    def __init__(self, dispatcher):
-        dispatcher.add_handler(CommandHandler("cams", self.cams))
-        dispatcher.add_handler(CallbackQueryHandler(self.get_video, pattern="^{}\:.*$".format(self.VIDEO_CALLBACK_ID)))
-        dispatcher.add_handler(CallbackQueryHandler(self.get_snapshot, pattern="^{}\:.*$".format(self.SNAPSHOT_CALLBACK_ID)))
+    def __init__(self, telegram):
+        telegram.dispatcher.add_handler(CommandHandler("cams", self.cams))
+        telegram.dispatcher.add_handler(CallbackQueryHandler(self.get_video, pattern="^{}\:.*$".format(self.VIDEO_CALLBACK_ID)))
+        telegram.dispatcher.add_handler(CallbackQueryHandler(self.get_snapshot, pattern="^{}\:.*$".format(self.SNAPSHOT_CALLBACK_ID)))
 
     def cams(self, update, context):
 

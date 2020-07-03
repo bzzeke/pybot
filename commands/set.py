@@ -40,9 +40,9 @@ class Set:
     }
 
 
-    def __init__(self, dispatcher, mqtt):
+    def __init__(self, telegram, mqtt):
         self.mqtt = mqtt
-        dispatcher.add_handler(ConversationHandler(
+        telegram.dispatcher.add_handler(ConversationHandler(
             entry_points=[CommandHandler('set', self.select_topic)],
 
             states={
@@ -50,8 +50,8 @@ class Set:
             },
             fallbacks = []
         ))
-        dispatcher.add_handler(CallbackQueryHandler(self.set_value, pattern="^{}\:.*$".format(self.TOPIC_CALLBACK_ID)))
-        dispatcher.add_handler(CallbackQueryHandler(self.publish, pattern="^{}\:.*$".format(self.VALUE_CALLBACK_ID)))
+        telegram.dispatcher.add_handler(CallbackQueryHandler(self.set_value, pattern="^{}\:.*$".format(self.TOPIC_CALLBACK_ID)))
+        telegram.dispatcher.add_handler(CallbackQueryHandler(self.publish, pattern="^{}\:.*$".format(self.VALUE_CALLBACK_ID)))
 
     def select_topic(self, update, context):
 

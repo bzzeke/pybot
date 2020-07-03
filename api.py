@@ -20,13 +20,11 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from utils import log, serialize
 
 class ApiHTTPServer(ThreadingMixIn, HTTPServer):
-    bot = None
-    dispatcher = None
+    telegram = None
 
-    def __init__(self, server_address, RequestHandlerClass, bind_and_activate=True, bot=None, dispatcher=None):
+    def __init__(self, server_address, RequestHandlerClass, bind_and_activate=True, telegram=None):
         super(ApiHTTPServer, self).__init__(server_address, RequestHandlerClass, bind_and_activate=bind_and_activate)
-        self.bot = bot
-        self.dispatcher = dispatcher
+        self.telegram = telegram
 
 class HTTPHandler(BaseHTTPRequestHandler):
 
@@ -92,7 +90,7 @@ class ApiHandler(HTTPHandler):
     def hook(self, args, body):
 
         if args[0] == "process":
-            self.server.dispatcher.process_update(Update.de_json(json.loads(body), self.server.bot))
+            self.server.telegram.dispatcher.process_update(Update.de_json(json.loads(body), self.server.telegram.bot))
 
     def notify(self, args, body):
         MAX_MESSAGE_LENGTH = 4096
@@ -132,9 +130,9 @@ class ApiHandler(HTTPHandler):
 
                 for chat_id in chat_ids:
                     if file == None:
-                        self.server.bot.send_message(chat_id=chat_id, text=payload["text"], parse_mode=payload["parse_mode"] if "parse_mode" in payload else "")
+                        self.server.telegram.bot.send_message(chat_id=chat_id, text=payload["text"], parse_mode=payload["parse_mode"] if "parse_mode" in payload else "")
                     else:
-                        self.server.bot.send_document(chat_id=chat_id, document=file, filename="message.txt", parse_mode=payload["parse_mode"] if "parse_mode" in payload else "")
+                        self.server.telegram.bot.send_document(chat_id=chat_id, document=file, filename="message.txt", parse_mode=payload["parse_mode"] if "parse_mode" in payload else "")
 
                     if "attachments" in payload:
                         for index, attachment in enumerate(payload["attachments"]):
@@ -149,7 +147,7 @@ class ApiHandler(HTTPHandler):
                                     [InlineKeyboardButton("Get video", callback_data=serialize("cams", "get_video", "{}_{}".format(camera, timestamp)))]
                                 ])
 
-                            self.server.bot.send_photo(chat_id=chat_id, photo = file, reply_markup=reply_markup)
+                            self.server.telegram.bot.send_photo(chat_id=chat_id, photo = file, reply_markup=reply_markup)
 
                 response["status"] = "ok"
 
@@ -166,17 +164,15 @@ class ApiHandler(HTTPHandler):
 
 class ApiServer(Thread):
     httpd = None
-    bot = None
-    dispatcher = None
+    telegram = None
 
-    def __init__(self, group=None, target=None, name=None, args=(), kwargs=None, bot=None, dispatcher=None):
+    def __init__(self, group=None, target=None, name=None, args=(), kwargs=None, telegram=None):
         super(ApiServer,self).__init__(group=group, target=target, name=name)
-        self.bot = bot
-        self.dispatcher = dispatcher
+        self.telegram = telegram
 
     def run(self):
         log("[api] Starting service")
-        self.httpd = ApiHTTPServer((os.environ["API_SERVER_HOST"], int(os.environ["API_SERVER_PORT"])), ApiHandler, bot=self.bot, dispatcher=self.dispatcher)
+        self.httpd = ApiHTTPServer((os.environ["API_SERVER_HOST"], int(os.environ["API_SERVER_PORT"])), ApiHandler, telegram=self.telegram)
         try:
             self.httpd.serve_forever()
         except KeyboardInterrupt:
