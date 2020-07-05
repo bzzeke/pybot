@@ -4,6 +4,7 @@ import email
 import base64
 import time
 import asyncore
+import re
 
 from smtpd import SMTPServer
 from threading import Thread
@@ -13,7 +14,7 @@ from util import log
 class EMailServer(SMTPServer):
     def process_message(self, peer, mailfrom, rcpttos, data, **kwargs):
 
-        if not self.is_valid_sender(mailfrom):
+        if not self.is_valid_recipient(rcpttos[0]):
             return
 
         message = email.message_from_bytes(data)
@@ -40,8 +41,8 @@ class EMailServer(SMTPServer):
 
         requests.post("http://{}:{}/notify/general".format(os.environ["API_SERVER_HOST"], os.environ["API_SERVER_PORT"]), json=notification)
 
-    def is_valid_sender(self, sender):
-        return sender == os.environ["SMTP_VALID_EMAIL"]
+    def is_valid_recipient(self, recipient):
+        return re.match(os.environ["SMTP_VALID_EMAIL"], recipient) != None
 
 
 class MailServer(Thread):
