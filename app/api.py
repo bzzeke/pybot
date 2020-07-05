@@ -91,6 +91,10 @@ class ApiHandler(HTTPHandler):
 
         if args[0] == "process":
             self.server.telegram.dispatcher.process_update(Update.de_json(json.loads(body), self.server.telegram.bot))
+            self.send_response(200)
+            self.send_header("Content-type", "application/json")
+            self.end_headers()
+            return json.dumps(["ok"])
 
     def notify(self, args, body):
         MAX_MESSAGE_LENGTH = 4096
