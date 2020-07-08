@@ -27,7 +27,7 @@ class EMailServer(SMTPServer):
         for part in message.walk():
 
             if part.get_content_type() == 'text/plain':
-                body.append(part.get_payload())
+                body.append(part.get_payload(decode=True).decode())
                 continue
 
             if part.get_content_maintype() == 'multipart':
@@ -35,7 +35,7 @@ class EMailServer(SMTPServer):
             if part.get('Content-Disposition') is None:
                 continue
 
-            notification["attachments"].append(base64.b64encode(part.get_payload(decode=True)))
+            notification["attachments"].append(base64.b64encode(part.get_payload(decode=True)).decode())
 
         notification["text"] = "".join(body)
 
