@@ -148,7 +148,7 @@ class ApiHandler(HTTPHandler):
                             if "meta" in payload and "surveillance" in payload["meta"]:
                                 camera, timestamp = tuple(payload["meta"]["surveillance"][index])
                                 reply_markup = InlineKeyboardMarkup([
-                                    [InlineKeyboardButton("Get video", callback_data=serialize("cams", "get_video", "{}_{}".format(camera, timestamp)))]
+                                    [InlineKeyboardButton("Get video", callback_data=serialize("video", "{}_{}".format(camera, timestamp)))]
                                 ])
 
                             self.server.telegram.bot.send_photo(chat_id=chat_id, photo = file, reply_markup=reply_markup)
