@@ -4,6 +4,7 @@ import requests
 import shutil
 import tempfile
 
+from multiprocessing.pool import ThreadPool
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CommandHandler, CallbackQueryHandler
 
@@ -25,6 +26,7 @@ class Cams:
     def cams(self, update, context):
 
         r = requests.get("http://{}/camera_list".format(os.environ["CAMERA_SERVER"]))
+        self.cameras = []
 
         try:
             cameras = r.json()
@@ -64,6 +66,7 @@ class Cams:
     def download_snapshots(self, cam_id):
 
         files = []
+        urls = []
 
         if cam_id == self.ALL_CAMERAS:
             cam_ids = self.cameras
@@ -71,16 +74,21 @@ class Cams:
             cam_ids = [cam_id]
 
         for cam_id in cam_ids:
-            tfile = tempfile.TemporaryFile()
-            url = "http://{}/snapshot/{}".format(os.environ["CAMERA_SERVER"], cam_id)
-            with requests.get(url, stream=True) as r:
-                shutil.copyfileobj(r.raw, tfile)
-                tfile.seek(0)
+            urls.append("http://{}/snapshot/{}".format(os.environ["CAMERA_SERVER"], cam_id))
 
+        results = ThreadPool(len(urls)).imap_unordered(self.fetch_url, urls)
+        for tfile in results:
             files.append(tfile)
 
         return files
 
+    def fetch_url(self, url):
+        tfile = tempfile.TemporaryFile()
+        with requests.get(url, stream=True) as r:
+            shutil.copyfileobj(r.raw, tfile)
+            tfile.seek(0)
+
+        return tfile
 
     def download_video(self, meta):
 
