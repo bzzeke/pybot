@@ -16,7 +16,7 @@ class Cams:
     SNAPSHOT_CALLBACK_ID = "snapshot"
 
     ALL_CAMERAS = "all"
-    cameras = []
+    cameras = {}
 
     def __init__(self, telegram):
         telegram.dispatcher.add_handler(CommandHandler("cams", self.cams))
@@ -25,8 +25,8 @@ class Cams:
 
     def cams(self, update, context):
 
-        r = requests.get("http://{}/camera_list".format(os.environ["CAMERA_SERVER"]))
-        self.cameras = []
+        r = requests.get("http://{}/api/camera".format(os.environ["CAMERA_SERVER"]))
+        self.cameras = {}
 
         try:
             cameras = r.json()
@@ -34,8 +34,8 @@ class Cams:
                 [InlineKeyboardButton("All", callback_data=serialize(self.SNAPSHOT_CALLBACK_ID, "all"))]
             ]
             for camera in cameras["results"]:
-                self.cameras.append(camera["name"])
-                keyboard.append([InlineKeyboardButton(camera["name"], callback_data=serialize(self.SNAPSHOT_CALLBACK_ID, camera["name"]))])
+                self.cameras[camera["id"]] = camera["name"]
+                keyboard.append([InlineKeyboardButton(camera["name"], callback_data=serialize(self.SNAPSHOT_CALLBACK_ID, camera["id"]))])
 
             update.message.reply_text(
                 'Select camera:',
@@ -69,12 +69,12 @@ class Cams:
         urls = []
 
         if cam_id == self.ALL_CAMERAS:
-            cam_ids = self.cameras
+            cam_ids = self.cameras.keys()
         else:
             cam_ids = [cam_id]
 
         for cam_id in cam_ids:
-            urls.append("http://{}/snapshot/{}".format(os.environ["CAMERA_SERVER"], cam_id))
+            urls.append("http://{}/api/camera/{}/snapshot".format(os.environ["CAMERA_SERVER"], cam_id))
 
         results = ThreadPool(len(urls)).imap_unordered(self.fetch_url, urls)
         for tfile in results:
@@ -92,9 +92,9 @@ class Cams:
 
     def download_video(self, meta):
 
-        camera, timestamp = meta.split("_")
+        cam_id, timestamp = meta.split("_")
         video_file = tempfile.TemporaryFile()
-        url = "http://{}/video/{}/{}".format(os.environ["CAMERA_SERVER"], camera, timestamp)
+        url = "http://{}/api/clips/{}/video/{}".format(os.environ["CAMERA_SERVER"], cam_id, timestamp)
 
         with requests.get(url, stream=True) as r:
             shutil.copyfileobj(r.raw, video_file)
