@@ -25,7 +25,9 @@ class Cams:
 
     def cams(self, update, context):
 
-        r = requests.get("http://{}/api/camera".format(os.environ["CAMERA_SERVER"]))
+        r = requests.get("http://{}/api/camera".format(os.environ["CAMERA_SERVER"]), headers={
+            "Authorization": os.environ["CAMERA_SERVER_TOKEN"]
+        })
         self.cameras = {}
 
         try:
